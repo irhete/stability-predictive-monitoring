@@ -22,7 +22,7 @@ import numpy as np
 
 
 dataset_name = argv[1]
-cls_method = "lstm_singletask"
+cls_method = "lstm"
 
 train_ratio = 0.8
 val_ratio = 0.2
@@ -35,7 +35,7 @@ learning_rate = float(argv[6])
 activation = argv[7]
 optimizer = argv[8]
 
-nb_epoch = 100
+nb_epoch = 30
 
 data_split_type = "temporal"
 normalize_over = "train"
@@ -60,7 +60,10 @@ train, test = dataset_manager.split_data_strict(data, train_ratio, split=data_sp
 train, val = dataset_manager.split_val(train, val_ratio, split="random")
 
 dt_train = dataset_manager.encode_data_with_label_all_data(train)
+dt_val = dataset_manager.encode_data_with_label_all_data(val)
 dt_test = dataset_manager.encode_data_with_label_all_data(test)
+print(dt_train.shape, dt_val.shape, dt_test.shape)
+
 
 if "traffic_fines" in dataset_name:
     max_len = 10

@@ -21,7 +21,7 @@ import numpy as np
 
 
 dataset_name = argv[1]
-cls_method = "lstm_singletask"
+cls_method = "lstm"
 
 train_ratio = 0.8
 val_ratio = 0.2
@@ -34,7 +34,7 @@ learning_rate = float(argv[6])
 activation = argv[7]
 optimizer = argv[8]
 
-nb_epoch = 100
+nb_epoch = 30
 
 data_split_type = "temporal"
 normalize_over = "train"
@@ -46,6 +46,7 @@ checkpoint_filepath = "%s.{epoch:02d}-{val_loss:.2f}.hdf5"%checkpoint_prefix
 #params = "lstmsize%s_dropout%s_nlayers%s_batchsize%s_%s_%s_lr%s"%(lstmsize, dropout, n_layers, batch_size, activation, optimizer, learning_rate)
 
 ##### MAIN PART ###### 
+print('n_layers = %s, lstmsize = %s, batch_size = %s, dropout = %s, optimizer = %s, learning_rate = %s' % (n_layers, lstmsize, batch_size, dropout, optimizer, learning_rate))
 
 print('Preparing data...')
 start = time.time()
@@ -113,7 +114,9 @@ lr_reducer = ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=10, verb
 X, _, _, y_o = dataset_manager.generate_3d_data_with_label_all_data(dt_train, max_len)
 X_val, _, _, y_o_val = dataset_manager.generate_3d_data_with_label_all_data(dt_val, max_len)
 
+print(X.shape, y_o.shape, X_val.shape, y_o_val.shape)
+
 sys.stdout.flush()
-history = model.fit({'main_input': X}, {'outcome_output':y_o}, validation_split=0.2, verbose=2, callbacks=[early_stopping, model_checkpoint, lr_reducer], batch_size=max_len, epochs=nb_epoch)
+history = model.fit({'main_input': X}, {'outcome_output':y_o}, validation_data=(X_val, y_o_val), verbose=2, callbacks=[early_stopping, model_checkpoint, lr_reducer], batch_size=batch_size, epochs=nb_epoch)
 
 print("Done: %s"%(time.time() - start))

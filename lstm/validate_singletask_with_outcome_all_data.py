@@ -34,7 +34,7 @@ learning_rate = float(argv[6])
 activation = argv[7]
 optimizer = argv[8]
 
-nb_epoch = 10
+nb_epoch = 30
 
 data_split_type = "temporal"
 normalize_over = "train"
