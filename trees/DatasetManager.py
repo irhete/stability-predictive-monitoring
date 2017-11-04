@@ -25,6 +25,8 @@ class DatasetManager:
         self.dynamic_num_cols = dataset_confs.dynamic_num_cols[self.dataset_name]
         self.static_num_cols = dataset_confs.static_num_cols[self.dataset_name]
         
+        self.sorting_cols = [self.timestamp_col, self.activity_col]
+        
     
     def read_dataset(self):
         # read dataset
@@ -49,6 +51,34 @@ class DatasetManager:
         test = data[~data[self.case_id_col].isin(train_ids)].sort_values(self.timestamp_col, ascending=True, kind='mergesort')
 
         return (train, test)
+    
+    def split_data_strict(self, data, train_ratio, split="temporal"):  
+        # split into train and test using temporal split and discard events that overlap the periods
+        data = data.sort_values(self.sorting_cols, ascending=True, kind='mergesort')
+        grouped = data.groupby(self.case_id_col)
+        start_timestamps = grouped[self.timestamp_col].min().reset_index()
+        start_timestamps = start_timestamps.sort_values(self.timestamp_col, ascending=True, kind='mergesort')
+        train_ids = list(start_timestamps[self.case_id_col])[:int(train_ratio*len(start_timestamps))]
+        train = data[data[self.case_id_col].isin(train_ids)].sort_values(self.sorting_cols, ascending=True, kind='mergesort')
+        test = data[~data[self.case_id_col].isin(train_ids)].sort_values(self.sorting_cols, ascending=True, kind='mergesort')
+        split_ts = test[self.timestamp_col].min()
+        train = train[train[self.timestamp_col] < split_ts]
+        return (train, test)
+    
+    
+    def split_val(self, data, val_ratio, split="random", seed=22):  
+        # split into train and test using temporal split
+        grouped = data.groupby(self.case_id_col)
+        start_timestamps = grouped[self.timestamp_col].min().reset_index()
+        if split == "temporal":
+            start_timestamps = start_timestamps.sort_values(self.timestamp_col, ascending=True, kind="mergesort")
+        elif split == "random":
+            np.random.seed(seed)
+            start_timestamps = start_timestamps.reindex(np.random.permutation(start_timestamps.index))
+        val_ids = list(start_timestamps[self.case_id_col])[:int(val_ratio*len(start_timestamps))]
+        val = data[data[self.case_id_col].isin(val_ids)].sort_values(self.sorting_cols, ascending=True, kind="mergesort")
+        train = data[~data[self.case_id_col].isin(val_ids)].sort_values(self.sorting_cols, ascending=True, kind="mergesort")
+        return (train, val)
 
 
     def generate_prefix_data(self, data, min_length, max_length):

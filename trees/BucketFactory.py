@@ -4,7 +4,7 @@ from bucketers.ClusterBasedBucketer import ClusterBasedBucketer
 from bucketers.StateBasedBucketer import StateBasedBucketer
 from bucketers.PrefixLengthBucketer import PrefixLengthBucketer
 from bucketers.NoBucketer import NoBucketer
-from bucketers.KNNBucketer import KNNBucketer
+#from bucketers.KNNBucketer import KNNBucketer
 from sklearn.cluster import KMeans
 
         
@@ -25,9 +25,9 @@ def get_bucketer(method, encoding_method=None, case_id_col=None, cat_cols=None, 
     elif method == "prefix":
         return PrefixLengthBucketer(case_id_col=case_id_col)
     
-    elif method == "knn":
-        bucket_encoder = EncoderFactory.get_encoder(method=encoding_method, case_id_col=case_id_col, dynamic_cat_cols=cat_cols, dynamic_num_cols=num_cols)
-        return KNNBucketer(encoder=bucket_encoder, n_neighbors=n_neighbors)
+    #elif method == "knn":
+    #    bucket_encoder = EncoderFactory.get_encoder(method=encoding_method, case_id_col=case_id_col, dynamic_cat_cols=cat_cols, dynamic_num_cols=num_cols)
+    #    return KNNBucketer(encoder=bucket_encoder, n_neighbors=n_neighbors)
 
     else:
         print("Invalid bucketer type")
