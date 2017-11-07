@@ -19,6 +19,7 @@ from sys import argv
 import pandas as pd
 import numpy as np
 
+import auc_callback
 
 dataset_name = argv[1]
 cls_method = "lstm_singletask"
@@ -34,7 +35,7 @@ learning_rate = float(argv[6])
 activation = argv[7]
 optimizer = argv[8]
 
-nb_epoch = 30
+nb_epoch = 50
 
 data_split_type = "temporal"
 normalize_over = "train"
@@ -107,19 +108,23 @@ model.compile(loss={'outcome_output':'binary_crossentropy'}, optimizer=opt)
 #model_checkpoint = ModelCheckpoint(checkpoint_filepath, monitor='val_loss', verbose=0, save_best_only=True, save_weights_only=True, mode='auto')
 lr_reducer = ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=10, verbose=0, mode='auto', epsilon=0.0001, cooldown=0, min_lr=0)
 
-
 X, _, _, y_o = dataset_manager.generate_3d_data_with_label_all_data(dt_train, max_len)
 X_val, _, _, y_o_val = dataset_manager.generate_3d_data_with_label_all_data(dt_val, max_len)
 
+auc_cb = auc_callback.AUCHistory(X_val, y_o_val)
+
 sys.stdout.flush()
-history = model.fit({'main_input': X}, {'outcome_output':y_o}, validation_data=(X_val, y_o_val), verbose=2, callbacks=[lr_reducer], batch_size=batch_size, epochs=nb_epoch)
+history = model.fit({'main_input': X}, {'outcome_output':y_o}, validation_data=(X_val, y_o_val), verbose=2, callbacks=[auc_cb], batch_size=batch_size, epochs=nb_epoch)
+
+print(auc_cb)
+print(auc_cb.aucs)
 
 print("Done: %s"%(time.time() - start))
 
 
 with open(os.path.join(output_dir, "loss_files/loss_singletask_%s_%s.csv" % (params, dataset_name)), 'w') as fout:
-    fout.write("epoch;train_loss;val_loss;params\n")
+    fout.write("epoch;train_loss;val_loss;val_auc;params\n")
     for epoch in range(len(history.history['loss'])):
-        fout.write("%s;%s;%s;%s\n"%(epoch, history.history['loss'][epoch], history.history['val_loss'][epoch], params))
+        fout.write("%s;%s;%s;%s;%s\n"%(epoch, history.history['loss'][epoch], history.history['val_loss'][epoch], auc_cb.aucs[epoch], params))
 
 
