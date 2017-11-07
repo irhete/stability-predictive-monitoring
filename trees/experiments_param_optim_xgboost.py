@@ -23,6 +23,7 @@ bucket_method = argv[3]
 cls_encoding = argv[4]
 cls_method = argv[5]
 results_dir = argv[6]
+n_iter = int(argv[7])
 
 method_name = "%s_%s"%(bucket_method, cls_encoding)
 
@@ -108,7 +109,7 @@ with open(outfile, 'w') as fout:
         bucketer = BucketFactory.get_bucketer(bucket_method, **bucketer_args)
         bucket_assignments_train = bucketer.fit_predict(dt_train_prefixes)
 
-        for i in range(16):
+        for i in range(n_iter):
             n_estimators = np.random.randint(150, 1000)
             learning_rate = np.random.uniform(0.01, 0.07)
             subsample = np.random.uniform(0.3, 0.7)

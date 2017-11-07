@@ -13,7 +13,7 @@ dynamic_num_cols = {}
 static_num_cols = {}
 filename = {}
 
-logs_dir = "/home/irene/Repos/predictive-monitoring-benchmark/labeled_logs_csv_processed"
+logs_dir = "/gpfs/hpchome/etais/hpc_irheta/predictive-monitoring-benchmark/labeled_logs_csv_processed"
 
 #### Traffic fines settings ####
 
