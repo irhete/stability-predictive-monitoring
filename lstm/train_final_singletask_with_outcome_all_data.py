@@ -15,17 +15,32 @@ import os
 import sys
 from dataset_manager import DatasetManager
 from sys import argv
+import pickle
 
 import pandas as pd
 import numpy as np
 
 
 dataset_name = argv[1]
+optimal_params_filename = argv[2]
 cls_method = "lstm"
+home_dir = "."
 
 train_ratio = 0.8
 val_ratio = 0.2
 
+with open(os.path.join(home_dir, optimal_params_filename), "rb") as fin:
+    best_params = pickle.load(fin)
+
+lstmsize = int(best_params[dataset_name]["lstmsize"])
+dropout = float(best_params[dataset_name]["dropout"])
+n_layers = int(best_params[dataset_name]["n_layers"])
+batch_size = int(best_params[dataset_name]["batch_size"])
+learning_rate = float(best_params[dataset_name]["learning_rate"])
+activation = "sigmoid"
+optimizer = best_params[dataset_name]["optimizer"]
+
+"""
 lstmsize = int(argv[2])
 dropout = float(argv[3])
 n_layers = int(argv[4])
@@ -33,8 +48,9 @@ batch_size = int(argv[5])
 learning_rate = float(argv[6])
 activation = argv[7]
 optimizer = argv[8]
+"""
 
-nb_epoch = 30
+nb_epoch = 50
 
 data_split_type = "temporal"
 normalize_over = "train"

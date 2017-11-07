@@ -9,6 +9,7 @@ from keras.optimizers import Nadam, RMSprop
 from keras.callbacks import EarlyStopping, ModelCheckpoint, ReduceLROnPlateau
 from keras.layers.normalization import BatchNormalization
 from keras.layers.wrappers import TimeDistributed
+from sklearn.calibration import CalibratedClassifierCV
 import csv
 from sklearn.metrics import mean_absolute_error, accuracy_score, roc_auc_score
 import os
@@ -17,6 +18,7 @@ from dataset_manager import DatasetManager
 from sys import argv
 import glob
 import pickle
+from calibration_models import LSTM2D
 
 import pandas as pd
 import numpy as np
@@ -57,7 +59,7 @@ data_split_type = "temporal"
 normalize_over = "train"
 
 output_dir = "results"
-params = "lstm_final"
+params = "lstm_calibrated_sigmoid"
 checkpoint_prefix = os.path.join(output_dir, "checkpoints/model_%s_%s"%(dataset_name, params))
 checkpoint_filepath = "%s.{epoch:02d}-{val_loss:.2f}.hdf5"%checkpoint_prefix
 #params = "lstmsize%s_dropout%s_nlayers%s_batchsize%s_%s_%s_lr%s"%(lstmsize, dropout, n_layers, batch_size, activation, optimizer, learning_rate)
@@ -130,6 +132,13 @@ elif optimizer == "rmsprop":
 model.compile(loss={'outcome_output':'binary_crossentropy'}, optimizer=opt)
 model.load_weights(model_filename)
 
+X_val, _, _, y_o_val = dataset_manager.generate_3d_data_with_label_all_data(dt_val, max_len)
+n_cases, time_dim, n_features = X_val.shape
+
+model_2d = LSTM2D(model, time_dim, n_features)
+model_calibrated = CalibratedClassifierCV(model_2d, cv="prefit", method='sigmoid')
+model_calibrated.fit(X_val.reshape(n_cases, time_dim*n_features), y_o_val[:,0])
+
 print('Evaluating...')
 start = time.time()
 detailed_results = pd.DataFrame()
@@ -141,16 +150,15 @@ with open(results_file, 'w') as fout:
     total_auc_outcome = 0
     for nr_events in range(1, max_len+1):
         # encode only prefixes of this length
-        X, y_a, y_t, y_o, case_ids = dataset_manager.generate_3d_data_for_prefix_length_with_label_all_data(dt_test, max_len, nr_events)
-        print(X.shape, y_a.shape, y_t.shape, y_o.shape)
+        X, _, _, y_o, case_ids = dataset_manager.generate_3d_data_for_prefix_length_with_label_all_data(dt_test, max_len, nr_events)
         if X.shape[0] == 0:
             break
         
         #y_t = y_t * dataset_manager.divisors["timesincelastevent"]
         
-        pred_y_o = model.predict(X, verbose=0)
+        pred_y_o = model_calibrated.predict(X.reshape(X.shape[0], time_dim*n_features))
         try:
-            auc_outcome = roc_auc_score(y_o[:,0], pred_y_o[:,0])
+            auc_outcome = roc_auc_score(y_o[:,0], pred_y_o)
         except ValueError:
             auc_outcome = 0.5
         total += X.shape[0]
@@ -160,7 +168,7 @@ with open(results_file, 'w') as fout:
         csv_writer.writerow([dataset_name, cls_method, params, nr_events, "n_cases", X.shape[0]])
         csv_writer.writerow([dataset_name, cls_method, params, nr_events, "auc_outcome", auc_outcome])
 
-        current_results = pd.DataFrame({"dataset": dataset_name, "cls": cls_method, "params": params, "nr_events": nr_events, "predicted": pred_y_o[:,0], "actual": y_o[:,0], "case_id": case_ids})
+        current_results = pd.DataFrame({"dataset": dataset_name, "cls": cls_method, "params": params, "nr_events": nr_events, "predicted": pred_y_o, "actual": y_o[:,0], "case_id": case_ids})
         detailed_results = pd.concat([detailed_results, current_results], axis=0)
         
     csv_writer.writerow([dataset_name, cls_method, params, -1, "total_auc_outcome", total_auc_outcome / total])
