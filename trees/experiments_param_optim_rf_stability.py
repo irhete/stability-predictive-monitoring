@@ -33,7 +33,7 @@ cls_params_names = ['n_estimators', 'max_features', 'max_depth']
 params = {'n_estimators': n_estimators,
                   'max_features': max_features,
                   'max_depth': max_depth}
-cls_params_str = ";".join([str(params[param]) for param in cls_params_names])
+cls_params_str = "_".join([str(params[param]) for param in cls_params_names])
 
 home_dir = ""
 
@@ -130,14 +130,14 @@ for jj in range(1):
                 pipelines[bucket].fit(dt_train_bucket, train_y)
 
             # if the bucketing is prefix-length-based, then evaluate for each prefix length separately, otherwise evaluate all prefixes together 
-            max_evaluation_prefix_length = max_prefix_length if bucket_method == "prefix" else min_prefix_length
+            max_evaluation_prefix_length = max_prefix_length# if bucket_method == "prefix" else min_prefix_length
 
             prefix_lengths_test = dt_test_prefixes.groupby(dataset_manager.case_id_col).size()
             
             for nr_events in range(min_prefix_length, max_evaluation_prefix_length+1):
                 print("Predicting for %s events..."%nr_events)
 
-                if bucket_method == "prefix":
+                if True:#bucket_method == "prefix":
                     # select only prefixes that are of length nr_events
                     relevant_cases_nr_events = prefix_lengths_test[prefix_lengths_test == nr_events].index
 
