@@ -179,13 +179,13 @@ for jj in range(1):
                     test_y_bucket = dataset_manager.get_label_numeric(dt_test_bucket) # one row per case
                     test_y.extend(test_y_bucket)
                     
-                    dt_all_predictions = pd.concat(dt_all_predictions, pd.DataFrame({"predicted": preds_bucket,
+                    dt_all_predictions = pd.concat([dt_all_predictions, pd.DataFrame({"predicted": preds_bucket,
                                                                                      "actual": test_y_bucket,
                                                                                      "case_id": dataset_manager.get_case_ids(dt_test_bucket, nr_events),
                                                                                      "dataset_name": dataset_name,
                                                                                      "nr_events": nr_events,
                                                                                      "run": i,
-                                                                                     "params": cls_params_str}))
+                                                                                     "params": cls_params_str}), axis=0])
 dt_all_predictions.to_csv(outfile, sep=";", index=False)
                     
             #if len(set(test_y)) < 2:
