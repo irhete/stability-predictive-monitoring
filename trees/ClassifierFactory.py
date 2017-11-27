@@ -5,12 +5,12 @@ import xgboost as xgb
 from ClassifierWrapper import ClassifierWrapper
 
 
-def get_classifier(method, n_estimators, max_features=None, gbm_learning_rate=None, random_state=None, min_cases_for_training=30, learning_rate=None, subsample=None, max_depth=None, colsample_bytree=None, min_child_weight=None):
+def get_classifier(method, n_estimators, max_features=None, gbm_learning_rate=None, max_depth=None, random_state=None, min_cases_for_training=30, learning_rate=None, subsample=None, max_depth=None, colsample_bytree=None, min_child_weight=None):
 
     if method == "rf":
         return ClassifierWrapper(
-            cls=RandomForestClassifier(n_estimators=n_estimators, max_features=max_features, random_state=random_state), 
-            min_cases_for_training=min_cases_for_training)
+            cls=RandomForestClassifier(n_estimators=n_estimators, max_features=max_features, max_depth=max_depth,
+                                       random_state=random_state), min_cases_for_training=min_cases_for_training)
                
     elif method == "gbm":
         return ClassifierWrapper(

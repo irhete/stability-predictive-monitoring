@@ -58,7 +58,12 @@ random_state = 22
 fillna = True
 n_min_cases_in_bucket = 30
 
-cls_params_names = ['n_estimators', 'learning_rate', 'subsample', 'max_depth', 'colsample_bytree', 'min_child_weight']
+cls_params_names = ['n_estimators', 'max_features']
+
+def loguniform(low=0, high=1):
+    val = np.exp(np.random.uniform(0, 1, None))
+    scaled_val = (((val - np.exp(0)) * (high - low)) / (np.exp(1) - np.exp(0))) + low
+    return scaled_val
 
 ##### MAIN PART ######    
 with open(outfile, 'w') as fout:
@@ -101,9 +106,6 @@ with open(outfile, 'w') as fout:
         dt_train_prefixes = dataset_manager.generate_prefix_data(train, min_prefix_length, max_prefix_length)
         dt_test_prefixes = dataset_manager.generate_prefix_data(test, min_prefix_length, max_prefix_length)
 
-        #max_depth_values = [3, 4, 5, 6, 7, 8, 9]
-        #min_child_weight_values = [1, 2, 3]
-        
         # Bucketing prefixes based on control flow
         print("Bucketing prefixes...")
         bucketer = BucketFactory.get_bucketer(bucket_method, **bucketer_args)
@@ -111,18 +113,10 @@ with open(outfile, 'w') as fout:
 
         for i in range(n_iter):
             n_estimators = np.random.randint(150, 1000)
-            learning_rate = np.random.uniform(0.01, 0.07)
-            subsample = np.random.uniform(0.5, 1)#(0.3, 0.7)
-            max_depth = np.random.randint(3, 9) # max_depth_values[np.random.randint(0, len(max_depth_values))]
-            colsample_bytree = np.random.uniform(0.5, 1)#(0.5, 0.45)
-            min_child_weight = np.random.randint(1, 3) #min_child_weight_values[np.random.randint(0, len(min_child_weight_values))]
+            max_features = loguniform(0.01, 0.9)
 
             params = {'n_estimators': n_estimators,
-                      'learning_rate': learning_rate,
-                      'subsample': subsample,
-                      'max_depth': max_depth,
-                      'colsample_bytree': colsample_bytree,
-                      'min_child_weight': min_child_weight}
+                      'max_features': max_features}
 
             pipelines = {}
 

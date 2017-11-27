@@ -24,8 +24,16 @@ cls_encoding = argv[4]
 cls_method = argv[5]
 results_dir = argv[6]
 n_iter = int(argv[7])
+n_estimators = int(argv[8])
+max_features = float(argv[9])
+max_depth = int(argv[10])
 
 method_name = "%s_%s"%(bucket_method, cls_encoding)
+cls_params_names = ['n_estimators', 'max_features', 'max_depth']
+params = {'n_estimators': n_estimators,
+                  'max_features': max_features,
+                  'max_depth': max_depth}
+cls_params_str = ";".join([str(params[param]) for param in cls_params_names])
 
 home_dir = ""
 
@@ -50,7 +58,7 @@ encoding_dict = {
 datasets = [dataset_ref] if dataset_ref not in dataset_ref_to_datasets else dataset_ref_to_datasets[dataset_ref]
 methods = encoding_dict[cls_encoding]
 
-outfile = os.path.join(home_dir, results_dir, "val_results_%s_%s_%s.csv"%(cls_method, method_name, dataset_ref)) 
+outfile = os.path.join(home_dir, results_dir, "val_results_%s_%s_%s_%s.csv"%(cls_method, method_name, dataset_ref, cls_params_str)) 
 
 train_ratio = 0.8
 val_ratio = 0.2
@@ -58,12 +66,12 @@ random_state = 22
 fillna = True
 n_min_cases_in_bucket = 30
 
-cls_params_names = ['n_estimators', 'learning_rate', 'subsample', 'max_depth', 'colsample_bytree', 'min_child_weight']
+dt_all_predictions = pd.DataFrame()
 
 ##### MAIN PART ######    
-with open(outfile, 'w') as fout:
-    
-    fout.write("%s;%s;%s;%s;%s;%s;%s;%s\n"%("part", "dataset", "method", "cls", ";".join(cls_params_names), "nr_events", "metric", "score"))
+#with open(outfile, 'w') as fout:
+for jj in range(1):
+    #fout.write("%s;%s;%s;%s;%s;%s;%s;%s;%s\n"%("part", "run", "dataset", "method", "cls", ";".join(cls_params_names), "nr_events", "metric", "score"))
     
     for dataset_name in datasets:
         
@@ -101,28 +109,12 @@ with open(outfile, 'w') as fout:
         dt_train_prefixes = dataset_manager.generate_prefix_data(train, min_prefix_length, max_prefix_length)
         dt_test_prefixes = dataset_manager.generate_prefix_data(test, min_prefix_length, max_prefix_length)
 
-        #max_depth_values = [3, 4, 5, 6, 7, 8, 9]
-        #min_child_weight_values = [1, 2, 3]
-        
         # Bucketing prefixes based on control flow
         print("Bucketing prefixes...")
         bucketer = BucketFactory.get_bucketer(bucket_method, **bucketer_args)
         bucket_assignments_train = bucketer.fit_predict(dt_train_prefixes)
 
         for i in range(n_iter):
-            n_estimators = np.random.randint(150, 1000)
-            learning_rate = np.random.uniform(0.01, 0.07)
-            subsample = np.random.uniform(0.5, 1)#(0.3, 0.7)
-            max_depth = np.random.randint(3, 9) # max_depth_values[np.random.randint(0, len(max_depth_values))]
-            colsample_bytree = np.random.uniform(0.5, 1)#(0.5, 0.45)
-            min_child_weight = np.random.randint(1, 3) #min_child_weight_values[np.random.randint(0, len(min_child_weight_values))]
-
-            params = {'n_estimators': n_estimators,
-                      'learning_rate': learning_rate,
-                      'subsample': subsample,
-                      'max_depth': max_depth,
-                      'colsample_bytree': colsample_bytree,
-                      'min_child_weight': min_child_weight}
 
             pipelines = {}
 
@@ -186,12 +178,24 @@ with open(outfile, 'w') as fout:
                     # extract actual label values
                     test_y_bucket = dataset_manager.get_label_numeric(dt_test_bucket) # one row per case
                     test_y.extend(test_y_bucket)
+                    
+                    dt_all_predictions = pd.concat(dt_all_predictions, pd.DataFrame({"predicted": preds_bucket,
+                                                                                     "actual": test_y_bucket,
+                                                                                     "case_id": dataset_manager.get_case_ids(dt_test_bucket, nr_events),
+                                                                                     "dataset_name": dataset_name,
+                                                                                     "nr_events": nr_events,
+                                                                                     "run": i,
+                                                                                     "params": cls_params_str}))
+dt_all_predictions.to_csv(outfile, sep=";", index=False)
+                    
+            #if len(set(test_y)) < 2:
+            #    auc = None
+            #else:
+            #auc = roc_auc_score(dt_all_predictions.actual, dt_all_predictions.predicted)
+            
 
-                if len(set(test_y)) < 2:
-                    auc = None
-                else:
-                    auc = roc_auc_score(test_y, preds)
-                cls_params_str = ";".join([str(params[param]) for param in cls_params_names])
-
-                fout.write("%s;%s;%s;%s;%s;%s;%s;%s\n"%(part, dataset_name, method_name, cls_method, cls_params_str, nr_events, "auc", auc))
+            #fout.write("%s;%s;%s;%s;%s;%s;%s;%s;%s\n"%(part, i, dataset_name, method_name, cls_method, cls_params_str, nr_events, "auc", auc))
+            #fout.write("%s;%s;%s;%s;%s;%s;%s;%s;%s\n"%(part, i, dataset_name, method_name, cls_method, cls_params_str, nr_events, "auc", auc))
+            #fout.write("%s;%s;%s;%s;%s;%s;%s;%s;%s\n"%(part, i, dataset_name, method_name, cls_method, cls_params_str, nr_events, "auc", auc))
+            #fout.write("%s;%s;%s;%s;%s;%s;%s;%s;%s\n"%(part, i, dataset_name, method_name, cls_method, cls_params_str, nr_events, "auc", auc))
             

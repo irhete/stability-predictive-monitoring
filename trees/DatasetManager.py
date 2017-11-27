@@ -108,6 +108,12 @@ class DatasetManager:
     def get_label(self, data):
         return data.groupby(self.case_id_col).first()[self.label_col]
     
+    def get_case_ids(self, data, nr_events=1):
+        case_ids = data.groupby(self.case_id_col).first()[self.case_id_col]
+        if nr_events > 1:
+            case_ids = case_ids.apply(lambda x: "_".join(x.split("_")[:-1]))
+        return case_ids
+    
     def get_label_numeric(self, data):
         y = self.get_label(data) # one row per case
         return [1 if label == self.pos_label else 0 for label in y]
