@@ -109,7 +109,7 @@ class DatasetManager:
         return data.groupby(self.case_id_col).first()[self.label_col]
     
     def get_case_ids(self, data, nr_events=1):
-        case_ids = data.groupby(self.case_id_col).first()[self.case_id_col]
+        case_ids = data.groupby(self.case_id_col).first().index
         if nr_events > 1:
             case_ids = case_ids.apply(lambda x: "_".join(x.split("_")[:-1]))
         return case_ids
