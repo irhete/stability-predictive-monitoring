@@ -185,7 +185,7 @@ for jj in range(1):
                                                                                      "dataset_name": dataset_name,
                                                                                      "nr_events": nr_events,
                                                                                      "run": i,
-                                                                                     "params": cls_params_str}), axis=0])
+                                                                                     "params": cls_params_str})], axis=0)
 dt_all_predictions.to_csv(outfile, sep=";", index=False)
                     
             #if len(set(test_y)) < 2:
