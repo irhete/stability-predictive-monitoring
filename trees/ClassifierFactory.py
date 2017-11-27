@@ -5,7 +5,7 @@ import xgboost as xgb
 from ClassifierWrapper import ClassifierWrapper
 
 
-def get_classifier(method, n_estimators, max_features=None, gbm_learning_rate=None, max_depth=None, random_state=None, min_cases_for_training=30, learning_rate=None, subsample=None, max_depth=None, colsample_bytree=None, min_child_weight=None):
+def get_classifier(method, n_estimators, max_features=None, gbm_learning_rate=None, max_depth=None, random_state=None, min_cases_for_training=30, learning_rate=None, subsample=None, colsample_bytree=None, min_child_weight=None):
 
     if method == "rf":
         return ClassifierWrapper(
