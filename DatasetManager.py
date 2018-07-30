@@ -1,13 +1,9 @@
 import sys
 
-sys.path.append("../../")
 import dataset_confs
 
 import pandas as pd
 import numpy as np
-
-from sklearn.model_selection import StratifiedKFold
-
 
 class DatasetManager:
     
@@ -39,23 +35,6 @@ class DatasetManager:
         data[self.timestamp_col] = pd.to_datetime(data[self.timestamp_col])
 
         return data
-
-
-    def split_data(self, data, train_ratio, split="temporal", seed=22):  
-        # split into train and test using temporal split
-
-        grouped = data.groupby(self.case_id_col)
-        start_timestamps = grouped[self.timestamp_col].min().reset_index()
-        if split == "temporal":
-            start_timestamps = start_timestamps.sort_values(self.timestamp_col, ascending=True, kind="mergesort")
-        elif split == "random":
-            np.random.seed(seed)
-            start_timestamps = start_timestamps.reindex(np.random.permutation(start_timestamps.index))
-        train_ids = list(start_timestamps[self.case_id_col])[:int(train_ratio*len(start_timestamps))]
-        train = data[data[self.case_id_col].isin(train_ids)].sort_values(self.timestamp_col, ascending=True, kind='mergesort')
-        test = data[~data[self.case_id_col].isin(train_ids)].sort_values(self.timestamp_col, ascending=True, kind='mergesort')
-
-        return (train, test)
     
     def split_data_strict(self, data, train_ratio, split="temporal"):  
         # split into train and test using temporal split and discard events that overlap the periods
@@ -70,21 +49,6 @@ class DatasetManager:
         train = train[train[self.timestamp_col] < split_ts]
         return (train, test)
     
-    def split_data_discard(self, data, train_ratio, split="temporal"):  
-        # split into train and test using temporal split and discard events that overlap the periods
-        data = data.sort_values(self.sorting_cols, ascending=True, kind='mergesort')
-        grouped = data.groupby(self.case_id_col)
-        start_timestamps = grouped[self.timestamp_col].min().reset_index()
-        start_timestamps = start_timestamps.sort_values(self.timestamp_col, ascending=True, kind='mergesort')
-        train_ids = list(start_timestamps[self.case_id_col])[:int(train_ratio*len(start_timestamps))]
-        train = data[data[self.case_id_col].isin(train_ids)].sort_values(self.sorting_cols, ascending=True, kind='mergesort')
-        test = data[~data[self.case_id_col].isin(train_ids)].sort_values(self.sorting_cols, ascending=True, kind='mergesort')
-        split_ts = test[self.timestamp_col].min()
-        overlapping_cases = train[train[self.timestamp_col] >= split_ts][self.case_id_col].unique()
-        train = train[~train[self.case_id_col].isin(overlapping_cases)]
-        return (train, test)
-    
-    
     def split_val(self, data, val_ratio, split="random", seed=22):  
         # split into train and test using temporal split
         grouped = data.groupby(self.case_id_col)
@@ -98,7 +62,6 @@ class DatasetManager:
         val = data[data[self.case_id_col].isin(val_ids)].sort_values(self.sorting_cols, ascending=True, kind="mergesort")
         train = data[~data[self.case_id_col].isin(val_ids)].sort_values(self.sorting_cols, ascending=True, kind="mergesort")
         return (train, val)
-
 
     def generate_prefix_data(self, data, min_length, max_length):
         # generate prefix data (each possible prefix becomes a trace)
@@ -117,7 +80,6 @@ class DatasetManager:
         dt_prefixes['case_length'] = dt_prefixes.groupby(self.case_id_col)[self.activity_col].transform(len)
         
         return dt_prefixes
-
 
     def get_pos_case_length_quantile(self, data, quantile=0.90):
         return int(np.ceil(data[data[self.label_col]==self.pos_label].groupby(self.case_id_col).size().quantile(quantile)))
@@ -148,21 +110,4 @@ class DatasetManager:
         class_freqs = data[self.label_col].value_counts()
         return class_freqs[self.pos_label] / class_freqs.sum()
     
-    def get_stratified_split_generator(self, data, n_splits=5, shuffle=True, random_state=22):
-        grouped_firsts = data.groupby(self.case_id_col, as_index=False).first()
-        skf = StratifiedKFold(n_splits=n_splits, shuffle=shuffle, random_state=random_state)
-        
-        for train_index, test_index in skf.split(grouped_firsts, grouped_firsts[self.label_col]):
-            current_train_names = grouped_firsts[self.case_id_col][train_index]
-            train_chunk = data[data[self.case_id_col].isin(current_train_names)].sort_values(self.timestamp_col, ascending=True, kind='mergesort')
-            test_chunk = data[~data[self.case_id_col].isin(current_train_names)].sort_values(self.timestamp_col, ascending=True, kind='mergesort')
-            yield (train_chunk, test_chunk)
-            
-    def get_idx_split_generator(self, dt_for_splitting, n_splits=5, shuffle=True, random_state=22):
-        skf = StratifiedKFold(n_splits=n_splits, shuffle=shuffle, random_state=random_state)
-        
-        for train_index, test_index in skf.split(dt_for_splitting, dt_for_splitting[self.label_col]):
-            current_train_names = dt_for_splitting[self.case_id_col][train_index]
-            current_test_names = dt_for_splitting[self.case_id_col][test_index]
-            yield (current_train_names, current_test_names)
             

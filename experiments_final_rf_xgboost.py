@@ -1,10 +1,10 @@
 """This script trains and evaluates a predictive model for outcome-oriented predictive process monitoring.
 
 Usage:
-  experiments_final.py <dataset> <method> <classifier> <params_dir> <results_dir> (<truncate_traces>)
+  python experiments_final_rf_xgboost.py <dataset> <method> <classifier> <params_dir> <results_dir> (<truncate_traces>)
 
 Example:
-  experiments_final.py bpic2012_cancelled single_laststate xgboost optimal_params results
+  python experiments_final_rf_xgboost.py bpic2012_cancelled single_laststate xgboost optimal_params results
   
 Author: Irene Teinemaa [irene.teinemaa@gmail.com]
 """

@@ -1,7 +1,7 @@
 """This script extracts the best parameters for a predictive model based on multiple training runs. Execute this script after optimizing the parameters using the script experiments_param_optim_rf_xgboost.py.
 
 Usage:
-  extract_best_params_multiple_runs.py
+  python extract_best_params_multiple_runs_rf_xgboost.py
 
 Author: Irene Teinemaa [irene.teinemaa@gmail.com]
 """
@@ -17,6 +17,13 @@ from sklearn.metrics import roc_auc_score
 
 
 preds_dir = "val_results_runs"
+params_dir_auc = "optimal_params_5runs_auc"
+params_dir_auc_stab = "optimal_params_5runs_auc_rmspd"
+
+if not os.path.exists(params_dir_auc):
+    os.makedirs(params_dir_auc)
+if not os.path.exists(params_dir_auc_stab):
+    os.makedirs(params_dir_auc_stab)
 
 datasets = ["bpic2012_accepted", "bpic2012_cancelled", "bpic2012_declined", "bpic2017_accepted", "bpic2017_cancelled", 
             "bpic2017_refused", "sepsis_cases_1", "sepsis_cases_2", "sepsis_cases_4", "production", "traffic_fines_1",
@@ -64,7 +71,7 @@ for dataset_name in datasets:
             score = alpha * dt_metrics.auc - beta * dt_metrics.rmspd
             cls_params_str = np.argmax(score)
             best_params = {cls_params_names[cls_method][i]: val for i, val in enumerate(cls_params_str.split("_"))}
-            outfile = os.path.join("optimal_params_5runs_auc", "optimal_params_%s_%s_%s.pickle" % (dataset_name, method_name,
+            outfile = os.path.join(params_dir_auc, "optimal_params_%s_%s_%s.pickle" % (dataset_name, method_name,
                                                                                                    cls_method))
             with open(outfile, "wb") as fout:
                 pickle.dump(best_params, fout)
@@ -75,7 +82,7 @@ for dataset_name in datasets:
             score = alpha * dt_metrics.auc - beta * dt_metrics.rmspd
             cls_params_str = np.argmax(score)
             best_params = {cls_params_names[cls_method][i]: val for i, val in enumerate(cls_params_str.split("_"))}
-            outfile = os.path.join("optimal_params_5runs_auc_rmspd", "optimal_params_%s_%s_%s.pickle" % (dataset_name, 
+            outfile = os.path.join(params_dir_auc_stab, "optimal_params_%s_%s_%s.pickle" % (dataset_name, 
                                                                                                          method_name,
                                                                                                          cls_method))
             with open(outfile, "wb") as fout:
