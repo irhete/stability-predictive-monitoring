@@ -164,3 +164,28 @@ class DatasetManager:
                 y[idx, label] = 1
                 idx += 1
         return (X, y)
+    
+    def generate_3d_data_for_prefix_length(self, data, max_len, nr_events):
+        grouped = data.groupby(self.case_id_col)
+        data_dim = data.shape[1] - 3
+        n_cases = np.sum(grouped.size() >= nr_events)
+        
+        # encode only prefixes of this length
+        X = np.zeros((n_cases, max_len, data_dim), dtype=np.float32)
+        y = np.zeros((n_cases, 2), dtype=np.float32)
+        case_ids = []
+        
+        idx = 0
+        for case_id, group in grouped:
+            if len(group) < nr_events:
+                continue
+            group = group.sort_values(self.timestamp_col, ascending=True, kind="mergesort")
+            label = group[self.label_col].iloc[0]
+            group = group.as_matrix()
+            X[idx] = pad_sequences(group[np.newaxis,:nr_events,:-3], maxlen=max_len, dtype=np.float32)
+            y[idx, label] = 1
+            case_ids.append(case_id)
+            idx += 1
+
+        return (X, y, case_ids)
+    

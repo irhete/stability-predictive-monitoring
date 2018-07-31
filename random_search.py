@@ -118,6 +118,8 @@ for dataset_name in datasets:
                                                                                            cls_method, params))
                 with open(script_file, "w") as fout:
                     fout.write("#!/bin/bash\n")
+                    fout.write("#SBATCH --partition=gpu\n")
+                    fout.write("#SBATCH --gres=gpu:1\n")
                     fout.write("#SBATCH --output=%s/output_%s_%s_%s_%s_singlerun.txt" % (output_files_dir, dataset_name, method_name,
                                                                                cls_method, params))
                     fout.write("#SBATCH --mem=%s\n" % memory)

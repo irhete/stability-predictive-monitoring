@@ -1,4 +1,4 @@
-"""This script trains and a deep neural network (with LSTM units) based predictive model for outcome-oriented predictive process monitoring. The script writes to a file for each training epoch the training and validation loss, as well as the validation AUC.
+"""This script trains a deep neural network (with LSTM units) based predictive model for outcome-oriented predictive process monitoring. The script writes to a file for each training epoch the training and validation loss, as well as the validation AUC.
 
 ***
 The architecture of the neural network is based on the approach proposed in the following paper:
@@ -8,10 +8,10 @@ with code available at: https://github.com/verenich/ProcessSequencePrediction
 ***
 
 Usage of the current script:
-  python experiments_param_optim_lstm.py <dataset> <method> <classifier> <params_dir> <results_dir> (<truncate_traces>)
+  python experiments_param_optim_lstm.py <dataset> <method> <classifier> <params_str> <results_dir>
 
 Example:
-  python experiments_param_optim_lstm.py bpic2012_cancelled single_laststate xgboost optimal_params results
+  python experiments_param_optim_lstm.py bpic2012_cancelled lstm lstm 43_0.184432748903_2_8_adam_0.00135703810542 loss_files
   
 Author: Irene Teinemaa [irene.teinemaa@gmail.com]
 """

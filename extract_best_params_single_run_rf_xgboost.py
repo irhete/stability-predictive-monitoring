@@ -1,4 +1,4 @@
-"""This script extracts the best parameters for a predictive model based on a single training run. Execute this script after optimizing the parameters using the script experiments_param_optim_rf_xgboost.py.
+"""This script extracts the best parameters for a predictive model based on a single training run. Execute this script after testing several parameter settings using the script experiments_param_optim_rf_xgboost.py.
 
 Usage:
   python extract_best_params_single_run_rf_xgboost.py

@@ -64,7 +64,7 @@ val_ratio = 0.2
 random_state = 22
 min_cases_for_training = 1
 
-# create results directory
+# create results directories
 if not os.path.exists(results_dir):
     os.makedirs(results_dir)
 if not os.path.exists(detailed_results_dir):
@@ -76,7 +76,7 @@ for dataset_name in datasets:
     
     # load optimal params
     optimal_params_filename = os.path.join(params_dir, "optimal_params_%s_%s_%s.pickle" % (dataset_name, method_name,
-                                                                                                   cls_method.replace("_calibrated", "")))
+                                                                                           cls_method.replace("_calibrated", "")))
     if not os.path.isfile(optimal_params_filename) or os.path.getsize(optimal_params_filename) <= 0:
         continue
         
