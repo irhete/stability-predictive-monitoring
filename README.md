@@ -1,7 +1,12 @@
 # Temporal Stability in Predictive Process Monitoring
 This repository contains the code for the experiments conducted in the article ["Temporal stability in predictive process monitoring"](https://link.springer.com/article/10.1007/s10618-018-0575-9) by [Irene Teinemaa](https://irhete.github.io/), [Marlon Dumas](http://kodu.ut.ee/~dumas/), [Anna Leontjeva](https://scholar.google.com/citations?user=XkCYSbQAAAAJ&hl=fr), and [Fabrizio Maria Maggi](https://scholar.google.nl/citations?user=Jo9fNKEAAAAJ&hl=en&oi=sra), published in Data Mining and Knowledge Discovery, as part of the Journal Track of ECML PKDD 2018.
 
-The repository contains scripts for training models for outcome-oriented predictive monitoring (i.e. classification models for complex sequences based on random forest, XGBoost, and LSTM), evaluating the prediction accuracy and temporal prediction stability, and applying exponential smoothing to reduce the volatility in predictions.
+The repository contains scripts for outcome-oriented predictive business process monitoring (i.e. classification models for complex sequences):
+
+* training predictive models based on random forest, XGBoost, and LSTM classifiers;
+* evaluating prediction accuracy and temporal prediction stability;
+* hyperparameter optimization via random search;
+* applying exponential smoothing to reduce the volatility in consecutive predictions.
 
 11 out of 12 evaluation datasets (labeled and preprocessed) can be found [here](https://drive.google.com/open?id=1a4RClJgmsyrQgCz_1O51gut_N1XoNBhn).
 
@@ -41,10 +46,10 @@ The scripts assume that each input dataset is a CSV file, each row representing 
 
 The input log is temporally split into data for training (80% of cases) and evaluating (20% of cases) the predictive models. The training data is further split (via random sampling over traces) into a dataset for training the base classifier (64% of all cases in the event log) and a two-purpose validation dataset (16% of all cases in the event log) that is used for selecting the best parameters and for probability calibration. After training and calibrating the models, prediction accuracy and temporal prediction stability are evaluated on the evaluation set.
 
-#### Hyperparameter optimization
+#### 1. Hyperparameter optimization
 The hyperparameters of the random forest, XGBoost, and LSTM models are tuned using random search, i.e. for each dataset and method, 16 randomly chosen parameter configurations are tested (on a validation set) and the configuration that yields the highest AUC is chosen.
 
-**1. Testing different parameter configurations.**
+1.1. Testing different parameter configurations.
 
 In order to launch experiments on 16 random parameter configurations for each method and dataset, run:
 
@@ -52,7 +57,7 @@ In order to launch experiments on 16 random parameter configurations for each me
 
 This script makes use of two other scripts, `python experiments_param_optim_rf_xgboost.py` and `python experiments_param_optim_lstm.py`, which take as input one specific parameter configuration and train and evaluate a predictive model on that setting. The `random_search.py` script assumes a SLURM queue management system. 
 
-**2. Selecting best parameters.**
+1.2. Selecting best parameters.
 
 After the experiments launched via `random_search.py` have finished, the best parameters can be extracted by running the following three scripts:
 
@@ -62,7 +67,7 @@ After the experiments launched via `random_search.py` have finished, the best pa
 
 `python extract_best_params_lstm.py` 
 
-#### Training, calibrating, and evaluating the (final) models
+#### 2. Training, calibrating, and evaluating the (final) models
 
 After extracting the best parameters, the final models can be trained and applied using:
 
@@ -80,6 +85,6 @@ The arguments to the scripts are:
 
 The evaluation of the models is done in `plot_results_stability.R`.
 
-#### Exponential smoothing
+#### 3. Exponential smoothing
 
 Exponential smoothing is applied in `plot_results_stability.R`.
