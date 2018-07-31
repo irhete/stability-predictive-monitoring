@@ -13,7 +13,7 @@ dynamic_num_cols = {}
 static_num_cols = {}
 filename = {}
 
-logs_dir = "/home/irene/Repos/predictive-monitoring-benchmark/labeled_logs_csv_processed"
+logs_dir = "/gpfs/hpchome/etais/hpc_irheta/predictive-monitoring-benchmark/labeled_logs_csv_processed"
 
 #### Traffic fines settings ####
 
@@ -63,7 +63,8 @@ for dataset in datasets:
                        'SIRSCritTemperature', 'SIRSCriteria2OrMore'] # i.e. case attributes that are known from the start
     dynamic_num_cols[dataset] = ['CRP', 'LacticAcid', 'Leucocytes', "hour", "weekday", "month", "timesincemidnight", "timesincelastevent", "timesincecasestart"]#, "event_nr", "open_cases"]
     static_num_cols[dataset] = ['Age']
-
+pos_label["sepsis_cases_4"] = "regular"
+neg_label["sepsis_cases_4"] = "deviant"
 
 #### Production log settings ####
 dataset = "production"

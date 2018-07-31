@@ -11,7 +11,7 @@ Usage of the current script:
   python experiments_param_optim_lstm.py <dataset> <method> <classifier> <params_str> <results_dir>
 
 Example:
-  python experiments_param_optim_lstm.py bpic2012_cancelled lstm lstm 43_0.184432748903_2_8_adam_0.00135703810542 loss_files
+  python experiments_param_optim_lstm.py bpic2012_cancelled lstm lstm 43_0.184432748903_2_8_adam_0.00135703810 val_results_lstm
   
 Author: Irene Teinemaa [irene.teinemaa@gmail.com]
 """
@@ -49,8 +49,6 @@ n_layers = int(params[2])
 batch_size = int(params[3])
 optimizer = params[4]
 learning_rate = float(params[5])
-
-params = "lstmsize%s_dropout%s_nlayers%s_batchsize%s_%s_%s_lr%s"%(lstmsize, dropout, n_layers, batch_size, activation, optimizer, learning_rate)
 
 activation = "sigmoid"
 nb_epoch = 50
@@ -133,9 +131,9 @@ print("Done: %s"%(time.time() - start))
 
 
 # Write loss for each epoch
-with open(os.path.join(output_dir, "loss_%s_%s_%s.csv" % (dataset_name, method_name, params)), 'w') as csvfile:
+with open(os.path.join(output_dir, "loss_%s_%s_%s.csv" % (dataset_name, method_name, params_str)), 'w') as csvfile:
     spamwriter = csv.writer(csvfile, delimiter=';', quoting=csv.QUOTE_NONE)
     spamwriter.writerow(["epoch", "train_loss", "val_loss", "val_auc", "params"])
     for epoch in range(len(history.history['loss'])):
         spamwriter.writerow([epoch, history.history['loss'][epoch], history.history['val_loss'][epoch], auc_cb.aucs[epoch], 
-                             params])
+                             params_str])

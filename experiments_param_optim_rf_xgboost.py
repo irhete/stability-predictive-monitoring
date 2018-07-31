@@ -45,7 +45,7 @@ for param in ['n_estimators', 'max_depth', 'min_child_weight']:
 # convert to float
 for param in ['max_features', 'learning_rate', 'subsample', 'colsample_bytree']:
     if param in params:
-        params[param] = int(params[param])
+        params[param] = float(params[param])
 
 cls_params_str = "_".join([str(params[param]) for param in cls_params_names[cls_method]])
 

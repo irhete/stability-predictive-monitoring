@@ -6,7 +6,7 @@ class LSTM2D(BaseEstimator):
         self.model = model
         self.time_dim = time_dim
         self.n_features = n_features
-    
+        self.classes_ = [0,1]
     
     def predict_proba(self, X):
         return self.model.predict(X.reshape((X.shape[0], self.time_dim, self.n_features)), verbose=0)

@@ -6,7 +6,7 @@ The repository contains scripts for outcome-oriented predictive business process
 * training predictive models based on random forest, XGBoost, and LSTM classifiers;
 * evaluating prediction accuracy and temporal prediction stability;
 * hyperparameter optimization via random search;
-* applying exponential smoothing to reduce the volatility in consecutive predictions.
+* applying exponential smoothing to reduce volatility in consecutive predictions.
 
 11 out of 12 evaluation datasets (labeled and preprocessed) can be found [here](https://drive.google.com/open?id=1a4RClJgmsyrQgCz_1O51gut_N1XoNBhn).
 
@@ -79,7 +79,7 @@ The arguments to the scripts are:
 
 * _dataset_ - the name of the dataset, should correspond to the settings specified in `dataset_confs.py`.
 * _method_ - combination of a bucketing and a sequence encoding technique, e.g. _single_agg_. For LSTM, use _lstm_.
-* _classifier_ - the name of the classifier. One of: _rf_, _xgboost_, _lstm_.
+* _classifier_ - the name of the classifier. One of: _rf_, _xgboost_, _lstm_. For calibrating the classifier, add _\_calibrated_ to the name, i.e. _rf\_calibrated_, _xgboost\_calibrated_, _lstm\_calibrated_.
 * _params_dir_ - the name of the directory where the optimal parameters have been saved (see above).
 * _results_dir_ - the name of the directory where the predictions will be written.
 

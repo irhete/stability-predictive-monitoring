@@ -14,7 +14,7 @@ from sys import argv
 import numpy as np
 import pandas as pd
 
-loss_files_dir = "loss_files"
+loss_files_dir = "val_results_lstm"
 params_dir = "optimal_params_lstm"
 
 if not os.path.exists(params_dir):
@@ -26,22 +26,22 @@ datasets = ["bpic2012_accepted", "bpic2012_cancelled", "bpic2012_declined", "bpi
 method_names = ["lstm"]
 cls_methods = ["lstm"]
 
-cls_params_names = ['lstmsize', 'dropout', 'n_layers', 'batch_size', 'activation', 'optimizer', 'learning_rate', 'nb_epoch']
+cls_params_names = ['lstmsize', 'dropout', 'n_layers', 'batch_size', 'optimizer', 'learning_rate', 'nb_epoch']
 
 for dataset_name in datasets:
     for method_name in method_names:
         for cls_method in cls_methods:
             files = glob.glob("%s/%s" % (loss_files_dir, "loss_%s_%s_*.csv" % (dataset_name, method_name)))
-
+            if len(files) < 1:
+                continue
             dt_all = pd.DataFrame()
             for file in files:
                 dt_all = pd.concat([dt_all, pd.read_csv(file, sep=";")], axis=0)
 
-            dt_all = dt_all[dt_all["epoch"]] >= 5
-            dt_all["params"] = dt_all["params"] + "_" + dt_all["epoch"]
+            dt_all = dt_all[dt_all["epoch"] >= 5]
+            dt_all["params"] = dt_all["params"] + "_" + dt_all["epoch"].astype(str)
 
-            dt_metrics = pd.DataFrame.from_dict(metrics, orient="index")
-            cls_params_str = dt_metrics["params"][np.argmin(dt_metrics["val_loss"])]
+            cls_params_str = dt_all["params"][np.argmin(dt_all["val_loss"])]
 
             best_params = {cls_params_names[i]: val for i, val in enumerate(cls_params_str.split("_"))}
             outfile = os.path.join(params_dir, "optimal_params_%s_%s_%s.pickle" % (dataset_name, method_name,

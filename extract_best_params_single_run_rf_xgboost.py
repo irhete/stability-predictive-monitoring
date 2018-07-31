@@ -37,7 +37,8 @@ for dataset_name in datasets:
     for method_name in method_names:
         for cls_method in cls_methods:
             files = glob.glob("%s/%s" % (preds_dir, "val_results_%s_%s_%s_*.csv"%(dataset_name, method_name, cls_method)))
-
+            if len(files) < 1:
+                continue
             metrics = {}
             for file in files:
                 data = pd.read_csv(file, sep=";")
@@ -54,10 +55,10 @@ for dataset_name in datasets:
             if "index" in method_name:
                 best_params = {}
                 for nr_events, vals in metrics.items():
-                    cls_params_str = max(vals.iteritems(), key=operator.itemgetter(1))[0]
+                    cls_params_str = max(vals.items(), key=operator.itemgetter(1))[0]
                     best_params[nr_events] = {cls_params_names[cls_method][i]: val for i, val in enumerate(cls_params_str.split("_"))}
             else:
-                cls_params_str = max(metrics.iteritems(), key=operator.itemgetter(1))[0]
+                cls_params_str = max(metrics.items(), key=operator.itemgetter(1))[0]
                 best_params = {cls_params_names[cls_method][i]: val for i, val in enumerate(cls_params_str.split("_"))}
                 
             outfile = os.path.join(params_dir, "optimal_params_%s_%s_%s.pickle" % (dataset_name, method_name,

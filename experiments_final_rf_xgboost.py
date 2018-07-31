@@ -4,7 +4,7 @@ Usage:
   python experiments_final_rf_xgboost.py <dataset> <method> <classifier> <params_dir> <results_dir> (<truncate_traces>)
 
 Example:
-  python experiments_final_rf_xgboost.py bpic2012_cancelled single_laststate xgboost optimal_params results
+  python experiments_final_rf_xgboost.py bpic2012_cancelled single_laststate xgboost_calibrated optimal_params results
   
 Author: Irene Teinemaa [irene.teinemaa@gmail.com]
 """
@@ -101,8 +101,7 @@ for dataset_name in datasets:
 
     # split into training and test
     train, test = dataset_manager.split_data_strict(data, train_ratio)
-    if "calibrate" in cls_method:
-        train, val = dataset_manager.split_val(train, val_ratio)
+    train, val = dataset_manager.split_val(train, val_ratio)
     overall_class_ratio = dataset_manager.get_class_ratio(train)
     
     # generate prefix logs
@@ -182,7 +181,8 @@ for dataset_name in datasets:
         preds_all.extend(preds)
         
         case_ids = list(dt_test_bucket.groupby(dataset_manager.case_id_col).first().index)
-        current_results = pd.DataFrame({"dataset": dataset_name, "cls": cls_method, "params": method_name, "nr_events": bucket, "predicted": preds, "actual": test_y, "case_id": case_ids})
+        current_results = pd.DataFrame({"dataset": dataset_name, "method": method_name, "cls": cls_method, 
+                                    "nr_events": bucket, "predicted": preds, "actual": test_y, "case_id": case_ids})
         detailed_results = pd.concat([detailed_results, current_results], axis=0)
 
     # write results

@@ -39,7 +39,8 @@ for dataset_name in datasets:
     for method_name in method_names:
         for cls_method in cls_methods:
             files = glob.glob("%s/%s" % (preds_dir, "val_results_%s_%s_%s_*.csv"%(dataset_name, method_name, cls_method)))
-
+            if len(files) < 1:
+                continue
             metrics = {}
             for file in files:
                 data = pd.read_csv(file, sep=";")

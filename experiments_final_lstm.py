@@ -11,7 +11,7 @@ Usage of the current script:
   python experiments_final_lstm.py <dataset> <method> <classifier> <params_dir> <results_dir>
 
 Example:
-  python experiments_final_lstm.py bpic2012_cancelled lstm lstm optimal_params_lstm results_lstm
+  python experiments_final_lstm.py bpic2012_cancelled lstm lstm_calibrated optimal_params_lstm results_lstm
   
 Author: Irene Teinemaa [irene.teinemaa@gmail.com]
 """
@@ -20,6 +20,7 @@ import time
 import os
 from sys import argv
 import csv
+import pickle
 
 import pandas as pd
 import numpy as np
@@ -32,6 +33,7 @@ from keras.optimizers import Nadam, RMSprop
 from keras.callbacks import EarlyStopping, ModelCheckpoint, ReduceLROnPlateau
 from keras.layers.normalization import BatchNormalization
 from sklearn.calibration import CalibratedClassifierCV
+from sklearn.metrics import roc_auc_score
 
 from DatasetManager import DatasetManager
 import auc_callback
@@ -46,7 +48,7 @@ results_dir = argv[5]
 
 optimal_params_filename = os.path.join(params_dir, "optimal_params_%s_%s_%s.pickle" % (dataset_name, method_name, 
                                                                                        cls_method.replace("_calibrated", "")))
-with open(os.path.join(params_dir, optimal_params_filename), "rb") as fin:
+with open(optimal_params_filename, "rb") as fin:
     params = pickle.load(fin)
     
 lstmsize = int(params['lstmsize'])
@@ -56,9 +58,6 @@ batch_size = int(params['batch_size'])
 optimizer = params['optimizer']
 learning_rate = float(params['learning_rate'])
 nb_epoch = int(params['nb_epoch'])
-
-params = "lstmsize%s_dropout%s_nlayers%s_batchsize%s_%s_%s_lr%s_nbepoch%s"%(lstmsize, dropout, n_layers, batch_size, 
-                                                                            activation, optimizer, learning_rate, nb_epoch)
 
 activation = "sigmoid"
 train_ratio = 0.8
@@ -102,8 +101,6 @@ del dt_val
 
 dt_test = dataset_manager.encode_data_for_lstm(test)
 del test
-X_test, y_test = dataset_manager.generate_3d_data(dt_test, max_len)
-del dt_test
 
 print("Done: %s"%(time.time() - start))
 
@@ -149,7 +146,7 @@ if "calibrate" in cls_method:
     n_cases, time_dim, n_features = X_val.shape
     model_2d = LSTM2D(model, time_dim, n_features)
     model_calibrated = CalibratedClassifierCV(model_2d, cv="prefit", method='sigmoid')
-    model_calibrated.fit(X_val.reshape(n_cases, time_dim*n_features), y_val[:,0])
+    model_calibrated.fit(X_val.reshape(n_cases, time_dim*n_features), y_val[:,1])
 
 print("Done: %s"%(time.time() - start))
 
@@ -170,16 +167,16 @@ for nr_events in range(1, max_len+1):
         break
 
     if "calibrate" in cls_method:
-        preds = model_calibrated.predict(X.reshape(X.shape[0], time_dim*n_features))
+        preds = model_calibrated.predict_proba(X.reshape(X.shape[0], time_dim*n_features))[:,1]
     else:
-        preds = model.predict(X, verbose=0)[:,0]
+        preds = model.predict(X, verbose=0)[:,1]
 
-    current_results = pd.DataFrame({"dataset": dataset_name, "cls": cls_method, "params": params, "nr_events": nr_events, 
-                                    "predicted": preds, "actual": y[:,0], "case_id": case_ids})
+    current_results = pd.DataFrame({"dataset": dataset_name, "method": method_name, "cls": cls_method,
+                                    "nr_events": nr_events, "predicted": preds, "actual": y[:,1], "case_id": case_ids})
     detailed_results = pd.concat([detailed_results, current_results], axis=0)
     
     preds_all.extend(preds)
-    test_y_all.extend(y[:,0])
+    test_y_all.extend(y[:,1])
     nr_events_all.extend([nr_events] * X.shape[0])
     
 print("Done: %s"%(time.time() - start))
@@ -189,7 +186,7 @@ results_file = os.path.join(results_dir, "results_%s_%s_%s.csv" % (cls_method, d
 detailed_results_file = os.path.join(detailed_results_dir, "detailed_results_%s_%s_%s.csv"%(cls_method, dataset_name, method_name)) 
 detailed_results.to_csv(detailed_results_file, sep=";", index=False)
 
-with open(outfile, 'w') as csvfile:
+with open(results_file, 'w') as csvfile:
     spamwriter = csv.writer(csvfile, delimiter=';', quoting=csv.QUOTE_NONE)
     spamwriter.writerow(["dataset", "method", "cls", "nr_events", "metric", "score"])
 

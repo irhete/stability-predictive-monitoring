@@ -2,8 +2,12 @@ import pandas as pd
 import numpy as np
 
 from sklearn.preprocessing import MinMaxScaler
-from keras.preprocessing.sequence import pad_sequences
 
+try:
+    from keras.preprocessing.sequence import pad_sequences
+except ImportError:
+    print("Could not load CUDA")
+    
 import dataset_confs
 
 class DatasetManager:
@@ -25,6 +29,8 @@ class DatasetManager:
         
         self.sorting_cols = [self.timestamp_col, self.activity_col]
         
+        self.scaler = None
+        self.encoded_cols = None
     
     def read_dataset(self):
         # read dataset
@@ -111,6 +117,9 @@ class DatasetManager:
         class_freqs = data[self.label_col].value_counts()
         return class_freqs[self.pos_label] / class_freqs.sum()
     
+    def get_prefix_lengths(self, data):
+        return data.groupby(self.case_id_col).last()["prefix_nr"]
+    
     def encode_data_for_lstm(self, data):
         data = data.sort_values(self.sorting_cols, ascending=True, kind='mergesort')
         
@@ -128,7 +137,7 @@ class DatasetManager:
         dt_cat = pd.get_dummies(data[cat_cols])
         
         # merge
-        dt_all = pd.concat([dt_scaled, dt_cat], axis=1)
+        dt_all = pd.concat([dt_all, dt_cat], axis=1)
         dt_all[self.case_id_col] = data[self.case_id_col]
         dt_all[self.label_col] = data[self.label_col].apply(lambda x: 1 if x == self.pos_label else 0)
         dt_all[self.timestamp_col] = data[self.timestamp_col]

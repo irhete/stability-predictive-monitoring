@@ -8,6 +8,8 @@ Author: Irene Teinemaa [irene.teinemaa@gmail.com]
 
 import subprocess
 import time
+import os
+
 import numpy as np
 
 def loguniform(low=0, high=1):
@@ -47,7 +49,7 @@ results_dir = "val_results"
 
 for dataset_name in datasets:
     
-    if "bpic2017" in dataset or "hospital_billing" in dataset:
+    if "bpic2017" in dataset_name or "hospital_billing" in dataset_name:
         memory = 30000
     else:
         memory = 10000
@@ -59,7 +61,7 @@ for dataset_name in datasets:
                 if cls_method == "rf":
                     n_estimators = np.random.randint(150, 1000)
                     max_features = loguniform(0.01, 0.9)
-                    params_str = "_".join([n_estimators, max_features])
+                    params_str = "_".join([str(n_estimators), str(max_features)])
 
                 else:
                     n_estimators = np.random.randint(150, 1000)
@@ -68,15 +70,16 @@ for dataset_name in datasets:
                     max_depth = np.random.randint(3, 9)
                     colsample_bytree = np.random.uniform(0.5, 1)
                     min_child_weight = np.random.randint(1, 3)
-                    params_str = "_".join([n_estimators, learning_rate, subsample, max_depth, colsample_bytree, min_child_weight])
+                    params_str = "_".join([str(n_estimators), str(learning_rate), str(subsample), str(max_depth), 
+                                           str(colsample_bytree), str(min_child_weight)])
 
-                params = " ".join([dataset_name, method_name, cls_method, params_str, n_runs, results_dir])
+                params = " ".join([dataset_name, method_name, cls_method, params_str, str(n_runs), results_dir])
                 script_file = os.path.join(script_files_dir, "run_%s_%s_%s_%s_singlerun.sh" % (dataset_name, method_name, 
-                                                                                           cls_method, params))
+                                                                                           cls_method, params_str))
                 with open(script_file, "w") as fout:
                     fout.write("#!/bin/bash\n")
                     fout.write("#SBATCH --output=%s/output_%s_%s_%s_%s_singlerun.txt" % (output_files_dir, dataset_name, method_name,
-                                                                               cls_method, params))
+                                                                               cls_method, params_str))
                     fout.write("#SBATCH --mem=%s\n" % memory)
                     fout.write("#SBATCH --time=7-00\n")
     
@@ -96,7 +99,7 @@ optimizer_values = ["rmsprop", "adam"]
 
 for dataset_name in datasets:
     
-    if "bpic2017" in dataset or "hospital_billing" in dataset:
+    if "bpic2017" in dataset_name or "hospital_billing" in dataset_name:
         memory = 30000
     else:
         memory = 10000
@@ -111,17 +114,18 @@ for dataset_name in datasets:
                 batch_size = batch_size_values[np.random.randint(0, len(batch_size_values))]
                 optimizer = optimizer_values[np.random.randint(0, len(optimizer_values))]
                 learning_rate = loguniform(low=0.000001, high=0.0001)                
-                params_str = "_".join([lstmsize, dropout, n_layers, batch_size, optimizer, learning_rate])
+                params_str = "_".join([str(lstmsize), str(dropout), str(n_layers), str(batch_size), optimizer, 
+                                       str(learning_rate)])
 
                 params = " ".join([dataset_name, method_name, cls_method, params_str, results_dir])
-                script_file = os.path.join(script_files_dir, "run_%s_%s_%s_%s_singlerun.sh" % (dataset_name, method_name, 
-                                                                                           cls_method, params))
+                script_file = os.path.join(script_files_dir, "run_%s_%s_%s_%s.sh" % (dataset_name, method_name, 
+                                                                                           cls_method, params_str))
                 with open(script_file, "w") as fout:
                     fout.write("#!/bin/bash\n")
                     fout.write("#SBATCH --partition=gpu\n")
                     fout.write("#SBATCH --gres=gpu:1\n")
-                    fout.write("#SBATCH --output=%s/output_%s_%s_%s_%s_singlerun.txt" % (output_files_dir, dataset_name, method_name,
-                                                                               cls_method, params))
+                    fout.write("#SBATCH --output=%s/output_%s_%s_%s_%s.txt" % (output_files_dir, dataset_name, method_name,
+                                                                               cls_method, params_str))
                     fout.write("#SBATCH --mem=%s\n" % memory)
                     fout.write("#SBATCH --time=7-00\n")
     
@@ -139,7 +143,7 @@ results_dir = "val_results_runs"
 
 for dataset_name in datasets:
     
-    if "bpic2017" in dataset or "hospital_billing" in dataset:
+    if "bpic2017" in dataset_name or "hospital_billing" in dataset_name:
         memory = 30000
     else:
         memory = 10000
@@ -151,7 +155,7 @@ for dataset_name in datasets:
                 if cls_method == "rf":
                     n_estimators = np.random.randint(150, 1000)
                     max_features = loguniform(0.01, 0.9)
-                    params_str = "_".join([n_estimators, max_features])
+                    params_str = "_".join([str(n_estimators), str(max_features)])
 
                 else:
                     n_estimators = np.random.randint(150, 1000)
@@ -160,15 +164,17 @@ for dataset_name in datasets:
                     max_depth = np.random.randint(3, 9)
                     colsample_bytree = np.random.uniform(0.5, 1)
                     min_child_weight = np.random.randint(1, 3)
-                    params_str = "_".join([n_estimators, learning_rate, subsample, max_depth, colsample_bytree, min_child_weight])
+                    params_str = "_".join([str(n_estimators), str(learning_rate), str(subsample), str(max_depth), 
+                                           str(colsample_bytree), str(min_child_weight)])
 
-                params = " ".join([dataset_name, method_name, cls_method, params_str, n_runs, results_dir])
+                params = " ".join([dataset_name, method_name, cls_method, params_str, str(n_runs), results_dir])
                 script_file = os.path.join(script_files_dir, "run_%s_%s_%s_%s_multipleruns.sh" % (dataset_name, method_name, 
-                                                                                           cls_method, params))
+                                                                                           cls_method, params_str))
                 with open(script_file, "w") as fout:
                     fout.write("#!/bin/bash\n")
                     fout.write("#SBATCH --output=%s/output_%s_%s_%s_%s_multipleruns.txt" % (output_files_dir, dataset_name, 
-                                                                                            method_name, cls_method, params))
+                                                                                            method_name, cls_method, 
+                                                                                            params_str))
                     fout.write("#SBATCH --mem=%s\n" % memory)
                     fout.write("#SBATCH --time=7-00\n")
     
